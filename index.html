@@ -2,6 +2,10 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="viewport" id="vp" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width" />
+		<meta name="apple-mobile-web-app-capable" content="no">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
 		<script type='application/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 		<script type='application/javascript' src="http://ulelo.com/proceduralterrain.js"></script>
 		<style>
@@ -32,10 +36,12 @@
 
 			#map_container {
 				display: inline-block;
+				margin-bottom: 10px;
 			}
 
 			.map {
 				font-size: 8px;
+				line-height: 1;
 			}
 
 			.button {
@@ -94,6 +100,23 @@
 				line-height: 1.5;
 				margin-bottom: 30px;
 			}
+
+			@media (max-width: 830px) {
+				h1 {
+					font-size: 14px;
+				}
+				h2 {
+					font-size: 10px;
+				}
+				body {
+					font-size: 9px;
+					line-height: 1.4;
+				}
+				* {
+					max-width:100%;
+				}
+			}
+
 		</style>
 		<title>Procedural Terrain Generator</title>
 	</head>
@@ -139,6 +162,16 @@
 		var granularity = 0.2;
 		var continent_factor = 2;
 		var water_level = details * 0.33;
+
+		if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || $(window).width() < 830) {
+			width = 40;
+			height = 40;
+		}
+		if ($(window).width() < 322){
+			width = 30;
+			height = 30;
+		}
+
 
 		var map = new ProceduralTerrain({height:height,width:width,details:details,continent_factor:continent_factor});
 
