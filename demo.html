@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<script type='application/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		<script type='application/javascript' src="http://ulelo.com/proceduralterrain.js"></script>
+		<link href='http://fonts.googleapis.com/css?family=VT323' rel='stylesheet' type='text/css'>
+		<style>
+			@font-face {
+				font-family: 'VGA8';
+				src: url('http://ulelo.com/VGA8.ttf');
+			}
+			* {
+				-webkit-box-sizing: border-box;
+				-moz-box-sizing: border-box;
+				box-sizing: border-box;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			body {
+				font-family: 'VGA8';
+				margin:0px;
+				padding:0px;
+				background: #000;
+				color:#fff;
+				font-size:10px;
+				text-align: center;
+			}
+
+			h1 {
+				font-size: 26px;
+			}
+
+			#map_container {
+				display: inline-block;
+			}
+
+			.map {
+				font-size: 8px;
+			}
+
+			.button {
+				display:inline-block;
+				cursor: pointer;
+				padding:5px;
+				border: 2px solid #fff;
+				margin-top: 3px;
+				margin-bottom: 3px;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				-o-user-select: none;
+				user-select: none;
+			}
+
+			input {
+				color:#000;
+				background-color: #fff;
+				border:0;
+				padding:5px;
+				width:35%;
+				font-family: inherit;
+				font-size: inherit;
+				margin-top:5px;
+			}
+
+			.control_container {
+				text-align: left;
+				display:inline-block;
+				vertical-align: top;
+				width:220px;
+				margin-bottom: 20px;
+				border: 2px solid #fff;
+				padding:5px;
+			}
+
+			.control_container .button {
+				width:100%;
+				text-align: center;
+			}
+
+			.label {
+				display: inline-block;
+				width:60%;
+			}
+
+			a {
+				color:inherit;
+				border-bottom: 2px solid #fff;
+			}
+
+			.about {
+				max-width:700px;
+				display: inline-block;
+				line-height: 1.5;
+				margin-bottom: 30px;
+			}
+		</style>
+		<title></title>
+	</head>
+	<body>
+
+		<h1>Procedural Terrain Generator</h1>
+		<h2>A Javascript library by <a href="https://benwasser.com">Ben Wasser</a></h2>
+		<div class="about">
+			Download it on <a href="https://github.com/benwasser/ProceduralTerrain.js">GitHub</a>. CC0 for everything except the Simplex implementation, which is by Jonas Wagner.
+		</div>
+
+		<div id="map_container">
+			<div id="2d_map" class="map"></div>
+			<div id="height_map" class="map" style="color:#1bce17;display:none;"></div>
+			<div id="temperature_map" class="map" style="color:#eae335;display:none;"></div>
+			<div id="precipitation_map" class="map" style="color:#479fff;display:none;"></div>
+		</div>
+
+		<div style="display:inline-block;vertical-align:top;width:220px;">
+			<div class="control_container">
+				<span class="label">Width:</span> <input type="text" placeholder="100" value="100" id="width"><br />
+				<span class="label">Height:</span> <input type="text" placeholder="100" value="100" id="height"><br />
+				<span class="label">Details:</span> <input type="text" placeholder="20" value="20" id="details"><br />
+				<span class="label">Granularity:</span> <input type="text" placeholder="0.2" value="0.2" id="granularity"><br />
+				<span class="label">Water Level:</span> <input type="text" placeholder="0.33" value="0.33" id="water_level"><br />
+				<span class="button" onclick="getInputs();generateAll();">Generate</span> 
+			</div>
+			<div class="control_container">
+				<span class="button" onclick="show('2d_map');">Terrain map</span><br />
+				<span class="button" onclick="show('height_map');">Height map</span><br />
+				<span class="button" onclick="show('temperature_map');">Temperature map</span><br />
+				<span class="button" onclick="show('precipitation_map');">Precipitation map</span>
+				<span class="button" onclick="evolveAll();generateAll();">Evolve</span>
+			</div>
+		</div>
+		
+
+	</body>
+	<script>
+		var width = 100;
+		var height = 100;
+		var details = 20;
+		var granularity = 0.2;
+		var continent_factor = 2;
+		var water_level = details * 0.33;
+
+		var map = new ProceduralTerrain({height:height,width:width,details:details,continent_factor:continent_factor});
+
+		function show(id){
+			$('.map').hide();
+			$('#' + id).show();
+		}
+
+		function render2DMap(){
+			var preview = '';
+			map.compileTerrain({water_level: water_level}, function(err, simple_map){
+				if (err) return alert(err);
+				for (var i = 0; i < simple_map.length; i++) {
+					for (var j = 0; j < simple_map[i].length; j++) {
+						if (simple_map[i][j] == '≋') simple_map[i][j] = '<span style="color:#335ad5;">≋</span>';
+						if (simple_map[i][j] == '≈') simple_map[i][j] = '<span style="color:#359af3;">≋</span>';
+						if (simple_map[i][j] == '≐') simple_map[i][j] = '<span style="color:#fff;">≐</span>';
+						if (simple_map[i][j] == '≡') simple_map[i][j] = '<span style="color:#a5dcd2;">≡</span>';
+						if (simple_map[i][j] == '∻') simple_map[i][j] = '<span style="color:#c3b687;">∻</span>';
+						if (simple_map[i][j] == '≏') simple_map[i][j] = '<span style="color:#6e6e70;">≏</span>';
+						if (simple_map[i][j] == '▓') simple_map[i][j] = '<span style="color:#7e849d;">▓</span>';
+						if (simple_map[i][j] == '▒') simple_map[i][j] = '<span style="color:#899d56;">▒</span>';
+						if (simple_map[i][j] == '░') simple_map[i][j] = '<span style="color:#589d53;">░</span>';
+						if (simple_map[i][j] == '∗') simple_map[i][j] = '<span style="color:#57ac53;">∗</span>';
+						if (simple_map[i][j] == '≼') simple_map[i][j] = '<span style="color:#3b7e5e;">≼</span>';
+						if (simple_map[i][j] == '≿') simple_map[i][j] = '<span style="color:#39950b;">≿</span>';
+						if (simple_map[i][j] == '≒') simple_map[i][j] = '<span style="color:#514c70;">≒</span>';
+						preview += simple_map[i][j];
+					}
+					preview += '<br />';
+				}
+				$('#2d_map').html(preview);
+			});
+		}
+
+		function getInputs(){
+			width = parseInt($('#width').val());
+			height = parseInt($('#height').val());
+			details = parseInt($('#details').val());
+			granularity = parseFloat($('#granularity').val());
+			water_level = details * parseFloat($('#water_level').val());
+			map = new ProceduralTerrain({height:height,width:width,details:details,continent_factor:continent_factor});
+		}
+
+		function evolveAll(){
+			map.evolveHeight();
+			map.evolveTemperature();
+			map.evolvePrecipitation();
+		}
+
+		function generateAll(){
+			$('#height_map').html(map.generateHeightMap(granularity).getHeightMap('text'));
+			$('#temperature_map').html(map.generateTemperatureMap(granularity).getTemperatureMap('text'));
+			$('#precipitation_map').html(map.generatePrecipitationMap(granularity).getPrecipitationMap('text'));
+			render2DMap();
+		}
+
+		generateAll();
+
+	</script>
+</html>
